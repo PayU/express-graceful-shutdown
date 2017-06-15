@@ -1,5 +1,5 @@
 {
-  "name": "express-graceful-shutdown",
+  "name": "graceful-shutdown-express",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",

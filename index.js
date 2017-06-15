@@ -46,7 +46,7 @@ function shutdown() {
     if (shuttingDown) return;
 
     shuttingDown = true;
-    logger.info({ message: `Shut down process initiated with graceful timeout of ${timeout} ms` });
+    logger.info({ msg: `Shut down process initiated with graceful timeout of ${timeout} ms` });
 
     // Forcefully shutdown after the timeout expired
     var timeoutId = setTimeout(function () {
