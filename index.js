@@ -14,7 +14,7 @@ function registerShutdownEvent(options) {
     }
     shuttingDown = false;
     logger = options.logger;
-    shutDownTimeout = Number(options.shutDownTimeout);
+    shutDownTimeout = Number(options.shutdownTimeout);
     newConnectionsTimeout = Number(options.newConnectionsTimeout);
     events = options.events || ['SIGINT', 'SIGTERM'];
     callback = options.callback;
@@ -29,11 +29,11 @@ function validateOptions(options) {
     if (options.callback && typeof options.callback !== 'function') {
         throw new Error('callback must be a function and must return a Promise');
     }
-    if (isNaN(options.newConnectionsTimeout)) {
-        throw new Error('newConnectionsTimeout is required and must be a number that represents milliseconds time')
+    if (options.newConnectionsTimeout && isNaN(options.newConnectionsTimeout)) {
+        throw new Error('newConnectionsTimeout must be a positive number');
     }
-    if (isNaN(options.shutDownTimeout)) {
-        throw new Error('shutDownTimeout is required and must be a number');
+    if (isNaN(options.shutdownTimeout) || options.shutdownTimeout <= 0) {
+        throw new Error('shutdownTimeout is required and must be a number greater then 0');
     }
     if (!options.server) {
         throw new Error('server is required and must be an express instance');
@@ -51,7 +51,7 @@ function shutdown() {
     if (shuttingDown) return;
 
     shuttingDown = true;
-    logger.info({ msg: `Shut down process initiated with graceful timeout of ${shutDownTimeout} ms. new connections timeout is ${newConnectionsTimeout} ms.`});
+    logger.info({ msg: `Shut down process initiated with graceful timeout of ${shutDownTimeout + newConnectionsTimeout}  ms`});
 
     setTimeout(() => {
         logger.info({msg: 'Server close event initiated. service wont except new connections now.'});

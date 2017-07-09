@@ -39,7 +39,7 @@ describe('When registering to Graceful shutdown', () => {
                 throw Error('The test should not exists at this point');
             } catch (error) {
                 should.exist(error);
-                should(error.message).eql('newConnectionsTimeout is required and must be a number that represents milliseconds time');
+                should(error.message).eql('newConnectionsTimeout must be a positive number');
             }
         });
         it('Should throw error when shutDownTimeout is not a number', () => {
@@ -48,12 +48,12 @@ describe('When registering to Graceful shutdown', () => {
                     events: ['event'],
                     callback: function() {},
                     newConnectionsTimeout: '5000',
-                    shutDownTimeout: 'notValidShutdownTimeout'
+                    shutdownTimeout: 'notValidShutdownTimeout'
                 });
                 throw Error('The test should not exists at this point');
             } catch (error) {
                 should.exist(error);
-                should(error.message).eql('shutDownTimeout is required and must be a number');
+                should(error.message).eql('shutdownTimeout is required and must be a number greater then 0');
             }
         });
         it('Should throw error when server is not a exists', () => {
@@ -62,7 +62,7 @@ describe('When registering to Graceful shutdown', () => {
                     events: ['event'],
                     callback: function() {},
                     newConnectionsTimeout: '5000',
-                    shutDownTimeout: '10000',
+                    shutdownTimeout: '10000',
                     server: null
                 });
                 throw Error('The test should not exists at this point');
@@ -77,7 +77,7 @@ describe('When registering to Graceful shutdown', () => {
                     events: ['event'],
                     callback: function() {},
                     newConnectionsTimeout: '5000',
-                    shutDownTimeout: '10000',
+                    shutdownTimeout: '10000',
                     server: {},
                     logger: null
                 });
@@ -92,7 +92,7 @@ describe('When registering to Graceful shutdown', () => {
                     events: ['event'],
                     callback: function() {},
                     newConnectionsTimeout: '5000',
-                    shutDownTimeout: '10000',
+                    shutdownTimeout: '10000',
                     server: {},
                     logger: {
                         error: function() {}
@@ -112,7 +112,7 @@ describe('When registering to Graceful shutdown', () => {
                     events: ['event'],
                     callback: function() {},
                     newConnectionsTimeout: '5000',
-                    shutDownTimeout: '10000',
+                    shutdownTimeout: '10000',
                     server: {},
                     logger: {
                         error: function() {},
@@ -141,7 +141,7 @@ describe('When registering to Graceful shutdown', () => {
             validOptions = {
                 events: ['event'],
                 newConnectionsTimeout: '10',
-                shutDownTimeout: '10',
+                shutdownTimeout: '10',
                 server: mockExpress,
                 logger: {
                     error: function() {},
