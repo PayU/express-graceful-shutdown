@@ -29,7 +29,7 @@ function validateOptions(options) {
     if (options.callback && typeof options.callback !== 'function') {
         throw new Error('callback must be a function and must return a Promise');
     }
-    if (options.newConnectionsTimeout && isNaN(options.newConnectionsTimeout)) {
+    if (options.newConnectionsTimeout && (isNaN(options.newConnectionsTimeout) || options.newConnectionsTimeout <=0)) {
         throw new Error('newConnectionsTimeout must be a positive number');
     }
     if (isNaN(options.shutdownTimeout) || options.shutdownTimeout <= 0) {
