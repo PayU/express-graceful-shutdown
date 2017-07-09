@@ -2,7 +2,7 @@
 let _ = require('lodash'),
     httpShutdown = require('http-shutdown').extend();
 
-let shuttingDown, server, events, logger, timeout, callback;
+let shuttingDown, server, events, logger, newConnectionsTimeout, shutDownTimeout, closeAllConnectionsTimeoutId, callback;
 const REQUIRED_LOGGER_IMPLEMENTATIONS = ['trace', 'info', 'error'];
 
 function registerShutdownEvent(options) {
@@ -14,21 +14,26 @@ function registerShutdownEvent(options) {
     }
     shuttingDown = false;
     logger = options.logger;
-    timeout = Number(options.timeout);
+    shutDownTimeout = Number(options.shutdownTimeout);
+    newConnectionsTimeout = Number(options.newConnectionsTimeout);
     events = options.events || ['SIGINT', 'SIGTERM'];
     callback = options.callback;
     logger.trace('Registering shutdown events', events);
     [].concat(events).map((event) => { process.on(event, shutdown) });
-};
+}
 
 function validateOptions(options) {
     if (!_.isArray(options.events) && typeof options.events !== 'string') {
+        throw new Error('events is required and must be a string or array of strings');
     }
-    if (options.callback && (typeof options.callback !== 'function' || typeof options.callback.then !== 'function')) {
+    if (options.callback && typeof options.callback !== 'function') {
         throw new Error('callback must be a function and must return a Promise');
     }
-    if (isNaN(options.timeout)) {
-        throw new Error('timeout is required and must be a number');
+    if (options.newConnectionsTimeout && (isNaN(options.newConnectionsTimeout) || Number(options.newConnectionsTimeout) <= 0)) {
+        throw new Error('newConnectionsTimeout must be a positive number');
+    }
+    if (isNaN(options.shutdownTimeout) || Number(options.shutdownTimeout) <= 0) {
+        throw new Error('shutdownTimeout is required and must be a number greater then 0');
     }
     if (!options.server) {
         throw new Error('server is required and must be an express instance');
@@ -46,21 +51,22 @@ function shutdown() {
     if (shuttingDown) return;
 
     shuttingDown = true;
-    logger.info({ msg: `Shut down process initiated with graceful timeout of ${timeout} ms` });
+    logger.info({ msg: `Shut down process initiated with graceful timeout of ${shutDownTimeout + newConnectionsTimeout}  ms`});
 
-    // Forcefully shutdown after the timeout expired
-    var timeoutId = setTimeout(function () {
-        logger.info({ msg: 'Not all connections were closed within the grace time. Closing all remaining connections forcefully' });
-        tearDown();
-    }, timeout);
+    setTimeout(() => {
+        logger.info({msg: 'Server close event initiated. service wont except new connections now.'});
 
-    // Close express connections
-    server.shutdown(function () {
-        logger.info({ msg: 'All connections were closed gracefully' });
-        clearTimeout(timeoutId);
-        tearDown();
-    });
-};
+        startGracefulShutdownPeriod();
+
+        // Close express connections
+        server.shutdown(function () {
+            logger.info({ msg: 'All connections were closed gracefully' });
+            clearTimeout(closeAllConnectionsTimeoutId);
+            tearDown();
+        });
+
+    }, newConnectionsTimeout);
+}
 
 function tearDown() {
     if (callback) {
@@ -76,6 +82,13 @@ function tearDown() {
     } else {
         exit(0);
     }
+}
+
+function startGracefulShutdownPeriod() {
+    closeAllConnectionsTimeoutId = setTimeout(function (){
+        logger.info({ msg: 'Not all connections were closed within the grace time. Closing all remaining connections forcefully' });
+        tearDown();
+    }, shutDownTimeout);
 }
 
 function exit(code) {
