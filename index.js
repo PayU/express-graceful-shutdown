@@ -29,7 +29,7 @@ function validateOptions(options) {
     if (options.callback && typeof options.callback !== 'function') {
         throw new Error('callback must be a function and must return a Promise');
     }
-    if (options.newConnectionsTimeout && (isNaN(options.newConnectionsTimeout) || Number(options.newConnectionsTimeout) <= 0)) {
+    if (options.newConnectionsTimeout !== undefined && (isNaN(options.newConnectionsTimeout) || Number(options.newConnectionsTimeout) <= 0)) {
         throw new Error('newConnectionsTimeout must be a positive number');
     }
     if (isNaN(options.shutdownTimeout) || Number(options.shutdownTimeout) <= 0) {
@@ -51,20 +51,19 @@ function shutdown() {
     if (shuttingDown) return;
 
     shuttingDown = true;
-    logger.info({ msg: `Shut down process initiated with graceful timeout of ${shutDownTimeout + newConnectionsTimeout}  ms`});
+    logger.info(`Shut down process initiated with graceful timeout of ${shutDownTimeout + newConnectionsTimeout}  ms`);
 
     setTimeout(() => {
-        logger.info({msg: 'Server close event initiated. service wont except new connections now.'});
+        logger.info('Server close event initiated. service wont except new connections now.');
 
         startGracefulShutdownPeriod();
 
         // Close express connections
         server.shutdown(function () {
-            logger.info({ msg: 'All connections were closed gracefully' });
+            logger.info('All connections were closed gracefully');
             clearTimeout(closeAllConnectionsTimeoutId);
             tearDown();
         });
-
     }, newConnectionsTimeout);
 }
 
@@ -72,11 +71,11 @@ function tearDown() {
     if (callback) {
         return callback()
             .then(() => {
-                logger.info({ msg: 'Callback function executed successfully' });
+                logger.info('Callback function executed successfully');
                 exit(0);
             })
             .catch((error) => {
-                logger.error({ msg: 'Callback function executation failed', error: error });
+                logger.error(error, 'Callback function execution failed');
                 exit(1);
             });
     } else {
@@ -86,13 +85,13 @@ function tearDown() {
 
 function startGracefulShutdownPeriod() {
     closeAllConnectionsTimeoutId = setTimeout(function (){
-        logger.info({ msg: 'Not all connections were closed within the grace time. Closing all remaining connections forcefully' });
+        logger.info('Not all connections were closed within the grace time. Closing all remaining connections forcefully');
         tearDown();
     }, shutDownTimeout);
 }
 
 function exit(code) {
-    logger.info({ msg: 'Shut down process completed' });
+    logger.info('Shut down process completed');
     process.exit(code);
 }
 
