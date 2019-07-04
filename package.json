@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- --recursive --reporter mochawesome ./tests/*-test.js && istanbul check-coverage --lines 95"
+    "test": "./node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- --recursive --reporter mochawesome ./tests/*-test.js && istanbul check-coverage --lines 95",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "repository": {
     "type": "git",
@@ -33,6 +35,8 @@
   },
   "dependencies": {
     "http-shutdown": "^1.2.0",
-    "lodash": "^4.17.4"
-  }
+    "lodash": "^4.17.4",
+    "snyk": "^1.189.0"
+  },
+  "snyk": true
 }
